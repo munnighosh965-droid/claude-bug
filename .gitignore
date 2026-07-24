@@ -1,0 +1,14 @@
+# Environment files - never commit credentials
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+*.log

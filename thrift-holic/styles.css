@@ -24,12 +24,18 @@ html {
     scroll-behavior: smooth;
 }
 
+html {
+    overflow-x: hidden;
+    overflow-x: clip;
+}
+
 body {
     font-family: var(--font-body);
     background-color: var(--warm-cream);
     color: var(--ink-black);
     line-height: 1.6;
     overflow-x: hidden;
+    overflow-x: clip;
 }
 
 /* ===== CUSTOM CURSOR ===== */
@@ -190,6 +196,41 @@ body {
     padding: 1rem 2rem;
 }
 
+/* Over the hero, the hero's own top bar acts as navigation on larger screens;
+   the fixed nav slides in once the user scrolls, so the two never overlap. */
+@media (min-width: 769px) {
+    .nav:not(.scrolled) {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-16px);
+        pointer-events: none;
+    }
+}
+
+/* On small screens the fixed nav (with menu / search / bag icons) stays
+   visible; the hero top bar keeps only the brand so the two do not overlap. */
+@media (max-width: 768px) {
+    .hero-top-bar .hero-nav {
+        display: none;
+    }
+
+    .nav:not(.scrolled) .nav-logo {
+        visibility: hidden;
+    }
+
+    /* While the nav is transparent it sits over the dark hero video (and
+       the dark mobile menu), so its icons need the light brand colour */
+    .nav:not(.scrolled) .nav-icon {
+        color: var(--warm-cream);
+        filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.7));
+    }
+
+    .nav:not(.scrolled) .nav-menu-toggle span {
+        background: var(--warm-cream);
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    }
+}
+
 .nav-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -204,6 +245,7 @@ body {
     letter-spacing: 0.2rem;
     color: var(--ink-black);
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .nav-links {
@@ -306,11 +348,13 @@ body {
     align-items: center;
     justify-content: center;
     transform: translateX(-100%);
-    transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+    visibility: hidden;
+    transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1), visibility 0.5s;
 }
 
 .mobile-menu.active {
     transform: translateX(0);
+    visibility: visible;
 }
 
 .mobile-menu-content {
@@ -1291,7 +1335,8 @@ body {
 
 .product-condition.excellent {
     border-color: var(--electric-lime);
-    color: var(--electric-lime);
+    color: var(--ink-black);
+    background: rgba(199, 255, 56, 0.25);
 }
 
 .product-price {
@@ -1483,6 +1528,9 @@ body {
     position: relative;
     padding: 4rem 2rem;
     transition: background-color 0.6s;
+    /* Contain the slide-in scroll animation so its off-screen start
+       position can never create horizontal page scroll */
+    overflow: hidden;
 }
 
 .featured-image {
@@ -1618,8 +1666,12 @@ body {
 .stat-number {
     font-family: var(--font-display);
     font-size: 4rem;
-    color: var(--electric-lime);
+    color: var(--ink-black);
     margin-bottom: 1rem;
+    text-decoration: underline;
+    text-decoration-color: var(--electric-lime);
+    text-decoration-thickness: 6px;
+    text-underline-offset: 8px;
 }
 
 .stat-label {
@@ -2055,6 +2107,8 @@ body {
     font-size: 0.85rem;
     text-decoration: underline;
     margin-top: 0.5rem;
+    padding: 0.6rem 0.6rem 0.6rem 0;
+    min-height: 44px;
 }
 
 /* ===== QUICK VIEW ===== */
@@ -2107,7 +2161,7 @@ body {
 .quick-view-price {
     font-family: var(--font-display);
     font-size: 2.5rem;
-    color: var(--electric-lime);
+    color: var(--ink-black);
     margin: 1rem 0;
 }
 
@@ -2253,6 +2307,18 @@ body {
         display: none;
     }
 
+    /* Keep the hero brand clear of the nav action icons */
+    .hero-brand {
+        font-size: 1.1rem;
+        letter-spacing: 0.2rem;
+        max-width: 55vw;
+    }
+
+    /* The scroll hint overlaps the CTA button on small screens */
+    .hero-scroll-instruction {
+        display: none;
+    }
+
     .hero-bottom-content {
         padding: 0 1.5rem;
         bottom: 2rem;
@@ -2299,54 +2365,46 @@ body {
     .hotspot-preview-price {
         font-size: 1.5rem;
     }
+
+    /* Keep the rotating product orbit inside small viewports */
+    .orbit-item {
+        width: 120px;
+        height: 150px;
+    }
+
+    .orbit-item img {
+        border-width: 3px;
+    }
+
+    /* Prevent long featured names from creating horizontal scroll */
+    .featured-details {
+        max-width: 100%;
+        overflow-wrap: break-word;
+    }
+
+    .featured-name {
+        font-size: clamp(2.2rem, 11vw, 3.5rem);
+        letter-spacing: 0.1rem;
+    }
 }
 
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 3rem;
+@media (max-width: 600px) {
+    /* Compact top bar so the logo and action icons fit side by side */
+    .nav {
+        padding: 1.25rem 1rem;
     }
 
-    .section-title {
-        font-size: 2.5rem;
+    .nav.scrolled {
+        padding: 0.75rem 1rem;
     }
 
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 2rem;
+    .nav-logo a {
+        font-size: 1.2rem;
+        letter-spacing: 0.1rem;
     }
 
-    .category-item h3 {
-        font-size: 3rem;
-    }
-
-    .orbit-container {
-        height: 400px;
-    }
-
-    .sustainability-stats {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .community-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-    }
-
-    .newsletter-form {
-        flex-direction: column;
-    }
-
-    .newsletter-form input {
-        width: 100%;
-    }
-
-    .mobile-nav-link {
-        font-size: 2rem;
-    }
-
-    .loader-wordmark {
-        font-size: 2.5rem;
+    .nav-actions {
+        gap: 0.5rem;
     }
 }
 
@@ -2378,6 +2436,24 @@ body {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex="0"]:focus-visible {
+    outline: 3px solid var(--electric-lime);
+    outline-offset: 2px;
+}
+
+.newsletter a:focus-visible,
+.newsletter button:focus-visible,
+.newsletter input:focus-visible {
+    outline-color: var(--ink-black);
 }
 
 /* ===== UTILITY CLASSES ===== */

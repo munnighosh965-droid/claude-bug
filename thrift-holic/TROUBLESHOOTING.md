@@ -3,7 +3,7 @@
 ## ✅ What I Just Fixed:
 
 1. ✅ Copied your video from Downloads to project folder
-2. ✅ Renamed it to `video-bg.mp4` (no spaces, browser-friendly)
+2. ✅ Renamed it to `thrift-holic-hero.mp4` (no spaces, browser-friendly)
 3. ✅ Updated HTML to use the new video file
 4. ✅ Set video to `autoplay` so it starts immediately
 5. ✅ Opened website in your browser
@@ -43,7 +43,7 @@
 ### Step 3: Check Video File
 ```bash
 # In your Downloads folder, can you play this file in Windows Media Player?
-C:\Users\munni\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4
+%USERPROFILE%\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4
 ```
 
 If Windows Media Player can't play it → Video file is corrupted
@@ -60,16 +60,16 @@ If Windows Media Player can't play it → Video file is corrupted
 ### Fix B: Check Video File Location
 Run this in Command Prompt:
 ```bash
-cd "C:\Users\munni\OneDrive\Documents\thrift holic"
-dir video-bg.mp4
+cd "<project folder>\thrift-holic"
+dir thrift-holic-hero.mp4
 ```
 
-Should show: `video-bg.mp4` with 3.0 MB size
+Should show: `thrift-holic-hero.mp4` with 3.0 MB size
 
 ### Fix C: Use Simple Test Page
 Open this file in browser:
 ```
-C:\Users\munni\OneDrive\Documents\thrift holic\video-test.html
+<project folder>\thrift-holic\video-test.html
 ```
 
 This shows detailed video loading diagnostics.
@@ -113,8 +113,8 @@ This shows detailed video loading diagnostics.
 
 ## 📊 Current Setup:
 
-**Video File:** `video-bg.mp4` (3.0 MB)  
-**Location:** `C:\Users\munni\OneDrive\Documents\thrift holic\`  
+**Video File:** `thrift-holic-hero.mp4` (3.0 MB)  
+**Location:** `<project folder>\thrift-holic\`  
 **Format:** MP4 (from WhatsApp)  
 **Settings:** Autoplay, Muted, Loop, Playsinline  
 
