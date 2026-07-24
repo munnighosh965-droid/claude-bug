@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Test - THRIFT HOLIC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0A0A0A;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .test-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid #C7FF38;
+            z-index: 1000;
+        }
+
+        .status {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #C7FF38;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        button {
+            background: #C7FF38;
+            color: #0A0A0A;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <video id="testVideo" autoplay muted loop playsinline>
+            <source src="hero-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <div class="overlay">
+            <h2>🎬 VIDEO TEST</h2>
+            <div class="status" id="videoStatus">Checking video...</div>
+            <div class="status" id="videoSize">Size: Checking...</div>
+            <div class="status" id="videoDuration">Duration: Checking...</div>
+            <div class="status" id="videoLoaded">Loaded: Checking...</div>
+            <div class="status" id="videoPlaying">Playing: Checking...</div>
+            <div class="status" id="videoError">Errors: None</div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="playVideo()">▶ Play</button>
+                <button onclick="pauseVideo()">⏸ Pause</button>
+                <button onclick="reloadVideo()">🔄 Reload</button>
+                <button onclick="window.location.href='index.html'">← Back to Site</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('testVideo');
+        const statusDiv = document.getElementById('videoStatus');
+        const sizeDiv = document.getElementById('videoSize');
+        const durationDiv = document.getElementById('videoDuration');
+        const loadedDiv = document.getElementById('videoLoaded');
+        const playingDiv = document.getElementById('videoPlaying');
+        const errorDiv = document.getElementById('videoError');
+
+        // Check video source
+        console.log('Video source:', video.querySelector('source').src);
+        console.log('Video current src:', video.currentSrc);
+
+        // Video events
+        video.addEventListener('loadstart', () => {
+            console.log('Video loading started');
+            statusDiv.innerHTML = '⏳ Loading...';
+            statusDiv.className = 'status';
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            console.log('Metadata loaded');
+            console.log('Duration:', video.duration);
+            console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+
+            durationDiv.innerHTML = `Duration: ${video.duration.toFixed(2)}s`;
+            durationDiv.className = 'status success';
+
+            sizeDiv.innerHTML = `Size: ${video.videoWidth}x${video.videoHeight}`;
+            sizeDiv.className = 'status success';
+        });
+
+        video.addEventListener('loadeddata', () => {
+            console.log('Video data loaded');
+            loadedDiv.innerHTML = 'Loaded: ✓ YES';
+            loadedDiv.className = 'status success';
+        });
+
+        video.addEventListener('canplay', () => {
+            console.log('Video can play');
+            statusDiv.innerHTML = '✓ Video Ready!';
+            statusDiv.className = 'status success';
+        });
+
+        video.addEventListener('playing', () => {
+            console.log('Video is playing');
+            playingDiv.innerHTML = 'Playing: ✓ YES';
+            playingDiv.className = 'status success';
+        });
+
+        video.addEventListener('pause', () => {
+            console.log('Video paused');
+            playingDiv.innerHTML = 'Playing: ✗ PAUSED';
+            playingDiv.className = 'status';
+        });
+
+        video.addEventListener('error', (e) => {
+            console.error('Video error:', e);
+            console.error('Error code:', video.error ? video.error.code : 'unknown');
+            console.error('Error message:', video.error ? video.error.message : 'unknown');
+
+            statusDiv.innerHTML = '✗ Video Error!';
+            statusDiv.className = 'status error';
+
+            let errorMsg = 'Unknown error';
+            if (video.error) {
+                switch(video.error.code) {
+                    case 1: errorMsg = 'MEDIA_ERR_ABORTED - Loading aborted'; break;
+                    case 2: errorMsg = 'MEDIA_ERR_NETWORK - Network error'; break;
+                    case 3: errorMsg = 'MEDIA_ERR_DECODE - Decode error'; break;
+                    case 4: errorMsg = 'MEDIA_ERR_SRC_NOT_SUPPORTED - Format not supported'; break;
+                }
+            }
+
+            errorDiv.innerHTML = `Errors: ${errorMsg}`;
+            errorDiv.className = 'status error';
+        });
+
+        function playVideo() {
+            video.play().then(() => {
+                console.log('Play successful');
+            }).catch(err => {
+                console.error('Play failed:', err);
+                alert('Play failed: ' + err.message);
+            });
+        }
+
+        function pauseVideo() {
+            video.pause();
+        }
+
+        function reloadVideo() {
+            video.load();
+            setTimeout(() => video.play(), 100);
+        }
+
+        // Auto-check after 2 seconds
+        setTimeout(() => {
+            if (video.paused) {
+                console.log('Video is paused, attempting to play...');
+                playVideo();
+            }
+
+            if (video.videoWidth === 0) {
+                console.error('Video has no dimensions - not loading properly');
+                statusDiv.innerHTML = '✗ Video not loading';
+                statusDiv.className = 'status error';
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

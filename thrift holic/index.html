@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THRIFT HOLIC — Pre-Loved. Reloved.</title>
+    <meta name="description" content="Curated vintage pieces for people who refuse to dress ordinary. One-of-one thrift fashion and vintage streetwear.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="customCursor">
+        <span class="cursor-text"></span>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-wordmark">
+                <span>T</span><span>H</span><span>R</span><span>I</span><span>F</span><span>T</span>
+                <span class="space"></span>
+                <span>H</span><span>O</span><span>L</span><span>I</span><span>C</span>
+            </div>
+            <div class="loader-tag">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                    <rect x="5" y="15" width="50" height="30" fill="none" stroke="#C7FF38" stroke-width="2"/>
+                    <line x1="30" y1="5" x2="30" y2="15" stroke="#C7FF38" stroke-width="2"/>
+                    <circle cx="30" cy="5" r="3" fill="#C7FF38"/>
+                </svg>
+            </div>
+            <div class="loader-counter">
+                <span id="loaderCounter">0</span>%
+            </div>
+            <div class="loader-message">ENTER THE ARCHIVE</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav" id="mainNav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#hero">THRIFT HOLIC</a>
+            </div>
+            <div class="nav-links">
+                <a href="#new-drop">New Drop</a>
+                <a href="#shop">Shop</a>
+                <a href="#lookbook">Lookbook</a>
+                <a href="#story">Our Story</a>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-icon" id="searchBtn" aria-label="Search">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 12L18 18" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+                <button class="nav-icon" id="wishlistBtn" aria-label="Wishlist">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 17.5L2 9.5C0.5 8 0.5 5.5 2 4C3.5 2.5 6 2.5 7.5 4L10 6.5L12.5 4C14 2.5 16.5 2.5 18 4C19.5 5.5 19.5 8 18 9.5L10 17.5Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span class="nav-badge" id="wishlistCount">0</span>
+                </button>
+                <button class="nav-icon" id="cartBtn" aria-label="Shopping Bag">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 6V5C5 2.5 6.5 1 10 1C13.5 1 15 2.5 15 5V6M2 6H18L17 19H3L2 6Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span class="nav-badge" id="cartCount">0</span>
+                </button>
+                <button class="nav-menu-toggle" id="menuToggle" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <nav class="mobile-nav">
+                <a href="#new-drop" class="mobile-nav-link">New Drop</a>
+                <a href="#shop" class="mobile-nav-link">Shop</a>
+                <a href="#lookbook" class="mobile-nav-link">Lookbook</a>
+                <a href="#story" class="mobile-nav-link">Our Story</a>
+            </nav>
+            <div class="mobile-menu-images">
+                <div class="mobile-menu-image" style="background-image: url('https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=400');"></div>
+                <div class="mobile-menu-image" style="background-image: url('https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=400');"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Hero Section -->
+    <section class="hero video-hero" id="hero">
+        <!-- Video Background -->
+        <div class="hero-video-container">
+            <video
+                id="heroVideo"
+                class="hero-video"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="auto"
+            >
+                <source src="video-bg.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="hero-video-overlay"></div>
+            <div class="hero-video-grain"></div>
+        </div>
+
+        <!-- Main Hero Interface (No Tap to Enter) -->
+        <div class="hero-interface active" id="heroInterface">
+            <!-- Top Bar -->
+            <div class="hero-top-bar">
+                <div class="hero-brand">THRIFT HOLIC®</div>
+                <div class="hero-nav">
+                    <a href="#shop">SHOP</a>
+                    <a href="#new-drop">NEW DROP</a>
+                    <a href="#lookbook">LOOKBOOK</a>
+                    <button class="hero-nav-bag" id="heroCartBtn">BAG (<span id="heroCartCount">0</span>)</button>
+                </div>
+            </div>
+
+            <!-- Bottom Content -->
+            <div class="hero-bottom-content">
+                <div class="hero-tagline">
+                    <p class="hero-subtitle-video">Curated vintage pieces for people who refuse to dress ordinary.</p>
+                </div>
+                <div class="hero-cta">
+                    <a href="#new-drop" class="hero-cta-button" id="heroCTA">
+                        <span>ENTER THE DROP</span>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10H16M16 10L10 4M16 10L10 16" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Scroll Instruction -->
+            <div class="hero-scroll-instruction">
+                <span>SCROLL TO EXPLORE</span>
+                <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path d="M10 4V16M10 16L4 10M10 16L16 10" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <!-- Video Progress Bar -->
+            <div class="video-progress-container" id="videoProgressContainer">
+                <div class="video-progress-bar" id="videoProgressBar"></div>
+            </div>
+        </div>
+
+        <!-- Product Hotspots -->
+        <div class="product-hotspots" id="productHotspots">
+            <!-- Hotspots will be dynamically added by JavaScript -->
+        </div>
+
+        <!-- Ripple Effect Container -->
+        <div class="video-ripple-container" id="videoRippleContainer"></div>
+    </section>
+
+    <!-- New Drop Section -->
+    <section class="section new-drop" id="new-drop">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">NEW DROP</h2>
+                <p class="section-subtitle">Fresh finds. One piece. One chance.</p>
+            </div>
+            <div class="products-grid" id="newDropGrid"></div>
+        </div>
+    </section>
+
+    <!-- Shop by Category -->
+    <section class="section categories" id="shop">
+        <div class="category-list">
+            <div class="category-item" data-category="oversized-tees">
+                <h3>OVERSIZED T-SHIRTS</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="vintage-shirts">
+                <h3>VINTAGE SHIRTS</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="hoodies">
+                <h3>HOODIES</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="jackets">
+                <h3>JACKETS</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="denim">
+                <h3>DENIM</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="bottoms">
+                <h3>BOTTOMS</h3>
+                <div class="category-preview"></div>
+            </div>
+            <div class="category-item" data-category="accessories">
+                <h3>ACCESSORIES</h3>
+                <div class="category-preview"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Orbit -->
+    <section class="section product-orbit-section">
+        <div class="orbit-container" id="productOrbit">
+            <div class="orbit-center-text">
+                <h2>ONE PIECE.<br>ONE OWNER.<br>ONE MORE STORY.</h2>
+            </div>
+            <div class="orbit-track" id="orbitTrack"></div>
+            <div class="orbit-controls">
+                <button class="orbit-arrow orbit-prev" aria-label="Previous">‹</button>
+                <button class="orbit-arrow orbit-next" aria-label="Next">›</button>
+            </div>
+            <div class="orbit-instruction">DRAG TO ROTATE</div>
+        </div>
+    </section>
+
+    <!-- Featured Archive -->
+    <section class="section featured-archive" id="featuredArchive">
+        <div class="featured-item" data-color="#7A1E24">
+            <div class="featured-image">
+                <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800" alt="Vintage Leather Jacket">
+            </div>
+            <div class="featured-details">
+                <span class="featured-era">1980s</span>
+                <h3 class="featured-name">LEATHER BOMBER</h3>
+                <span class="featured-fit">Oversized Fit</span>
+                <span class="featured-fabric">Genuine Leather</span>
+                <span class="featured-condition">Excellent Condition</span>
+                <button class="btn btn-primary featured-cta">SHOP THIS PIECE</button>
+            </div>
+        </div>
+        <div class="featured-item" data-color="#C7FF38">
+            <div class="featured-image">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800" alt="Vintage Denim Jacket">
+            </div>
+            <div class="featured-details">
+                <span class="featured-era">1990s</span>
+                <h3 class="featured-name">DENIM TRUCKER</h3>
+                <span class="featured-fit">Regular Fit</span>
+                <span class="featured-fabric">100% Cotton Denim</span>
+                <span class="featured-condition">Good Condition</span>
+                <button class="btn btn-primary featured-cta">SHOP THIS PIECE</button>
+            </div>
+        </div>
+        <div class="featured-item" data-color="#B7B4AD">
+            <div class="featured-image">
+                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800" alt="Vintage Windbreaker">
+            </div>
+            <div class="featured-details">
+                <span class="featured-era">1990s</span>
+                <h3 class="featured-name">TRACK WINDBREAKER</h3>
+                <span class="featured-fit">Athletic Fit</span>
+                <span class="featured-fabric">Nylon Shell</span>
+                <span class="featured-condition">Very Good Condition</span>
+                <button class="btn btn-primary featured-cta">SHOP THIS PIECE</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lookbook -->
+    <section class="section lookbook-section" id="lookbook">
+        <div class="lookbook-scroll-container">
+            <div class="lookbook-track" id="lookbookTrack">
+                <div class="lookbook-slide">
+                    <div class="lookbook-image">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200" alt="Lookbook 1">
+                        <div class="lookbook-overlay"></div>
+                    </div>
+                    <div class="lookbook-text">WORN BEFORE.<br>NEVER LIKE THIS.</div>
+                </div>
+                <div class="lookbook-slide">
+                    <div class="lookbook-image">
+                        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200" alt="Lookbook 2">
+                        <div class="lookbook-overlay"></div>
+                    </div>
+                    <div class="lookbook-text">NO RESTOCKS.<br>NO REPEATS.</div>
+                </div>
+                <div class="lookbook-slide">
+                    <div class="lookbook-image">
+                        <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200" alt="Lookbook 3">
+                        <div class="lookbook-overlay"></div>
+                    </div>
+                    <div class="lookbook-text">OLD CLOTHES.<br>NEW ATTITUDE.</div>
+                </div>
+                <div class="lookbook-slide">
+                    <div class="lookbook-image">
+                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200" alt="Lookbook 4">
+                        <div class="lookbook-overlay"></div>
+                    </div>
+                    <div class="lookbook-text">YOUR NEXT FAVOURITE<br>ALREADY HAS A PAST.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sustainability Story -->
+    <section class="section sustainability" id="story">
+        <div class="container">
+            <h2 class="sustainability-title">THE MOST SUSTAINABLE GARMENT<br>ALREADY EXISTS.</h2>
+            <div class="sustainability-stats">
+                <div class="stat">
+                    <div class="stat-number" data-target="2847">0</div>
+                    <div class="stat-label">Garments Re-Loved</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" data-target="85000">0</div>
+                    <div class="stat-label">Liters Water Saved (Est.)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" data-target="3200">0</div>
+                    <div class="stat-label">KG Kept from Landfill (Est.)</div>
+                </div>
+            </div>
+            <p class="sustainability-text">
+                Every piece in our archive has already been made. By choosing pre-loved, you're not just getting a unique garment—you're refusing to participate in overproduction.
+                No new resources. No factory waste. Just great clothes getting the life they deserve.
+            </p>
+            <p class="sustainability-disclaimer">
+                <em>Environmental impact figures are estimates based on industry averages and may vary by garment type.</em>
+            </p>
+        </div>
+    </section>
+
+    <!-- Community Marquee -->
+    <section class="section community-marquee">
+        <div class="marquee">
+            <div class="marquee-content">
+                <span>THRIFT IT</span>
+                <span>STYLE IT</span>
+                <span>RELOVE IT</span>
+                <span>REPEAT</span>
+                <span>THRIFT IT</span>
+                <span>STYLE IT</span>
+                <span>RELOVE IT</span>
+                <span>REPEAT</span>
+            </div>
+        </div>
+        <div class="community-grid" id="communityGrid">
+            <div class="community-card">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" alt="Community member">
+                <p>"Found my new favorite jacket here!"</p>
+            </div>
+            <div class="community-card">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" alt="Community member">
+                <p>"Quality pieces, unique style."</p>
+            </div>
+            <div class="community-card">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400" alt="Community member">
+                <p>"Love the sustainable approach!"</p>
+            </div>
+            <div class="community-card">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400" alt="Community member">
+                <p>"Every piece tells a story."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="section newsletter">
+        <div class="container">
+            <h2 class="newsletter-title">GET FIRST ACCESS<br>TO THE NEXT DROP.</h2>
+            <p class="newsletter-subtitle">One-of-one pieces disappear quickly. Be there before they do.</p>
+            <form class="newsletter-form" id="newsletterForm">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit" class="btn btn-primary">JOIN THE CULT</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">THRIFT HOLIC</div>
+                    <p class="footer-tagline">PRE-LOVED CLOTHES FOR A FUTURE THAT LOOKS BETTER.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <a href="#new-drop">New Drop</a>
+                        <a href="#shop">All Categories</a>
+                        <a href="#">Size Guide</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="#">Shipping</a>
+                        <a href="#">Returns</a>
+                        <a href="#">FAQ</a>
+                        <a href="#">Contact</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Follow</h4>
+                        <a href="#">Instagram</a>
+                        <a href="#">Pinterest</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Terms</a>
+                        <a href="#">Privacy</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 THRIFT HOLIC. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Search Modal -->
+    <div class="modal" id="searchModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeSearch">&times;</button>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search for vintage pieces..." id="searchInput">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Drawer -->
+    <div class="drawer" id="cartDrawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>SHOPPING BAG</h3>
+                <button class="drawer-close" id="closeCart">&times;</button>
+            </div>
+            <div class="drawer-body" id="cartItems">
+                <div class="empty-state">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <path d="M15 18V15C15 7.5 19.5 3 30 3C40.5 3 45 7.5 45 15V18M6 18H54L51 57H9L6 18Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <p>Your bag is empty</p>
+                    <a href="#new-drop" class="btn btn-primary">START SHOPPING</a>
+                </div>
+            </div>
+            <div class="drawer-footer" id="cartFooter" style="display: none;">
+                <div class="cart-total">
+                    <span>Total</span>
+                    <span id="cartTotal">$0</span>
+                </div>
+                <button class="btn btn-primary btn-block">CHECKOUT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist Drawer -->
+    <div class="drawer" id="wishlistDrawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>WISHLIST</h3>
+                <button class="drawer-close" id="closeWishlist">&times;</button>
+            </div>
+            <div class="drawer-body" id="wishlistItems">
+                <div class="empty-state">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <path d="M30 52.5L6 28.5C1.5 24 1.5 16.5 6 12C10.5 7.5 18 7.5 22.5 12L30 19.5L37.5 12C42 7.5 49.5 7.5 54 12C58.5 16.5 58.5 24 54 28.5L30 52.5Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <p>No favorites yet</p>
+                    <a href="#new-drop" class="btn btn-primary">EXPLORE PIECES</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Quick View Modal -->
+    <div class="modal" id="quickViewModal">
+        <div class="modal-content modal-large">
+            <button class="modal-close" id="closeQuickView">&times;</button>
+            <div class="quick-view-content" id="quickViewContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

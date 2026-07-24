@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMERGENCY VIDEO FIX - THRIFT HOLIC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0A0A0A;
+            color: #F4F0E8;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #C7FF38;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .video-section {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            background: #000;
+            margin: 20px 0;
+            border: 3px solid #C7FF38;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #C7FF38;
+            color: #0A0A0A;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #F4F0E8;
+            transform: scale(1.05);
+        }
+
+        .status {
+            background: rgba(199, 255, 56, 0.1);
+            border: 2px solid #C7FF38;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .status-item {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #C7FF38;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .warning {
+            color: #ffaa00;
+        }
+
+        .log {
+            background: #1a1a1a;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .info {
+            background: rgba(244, 240, 232, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #C7FF38;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 EMERGENCY VIDEO FIX</h1>
+
+        <div class="info">
+            <h2>📋 Instructions:</h2>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li><strong>Look at the video section below</strong> - Can you see the video playing?</li>
+                <li><strong>Click the "PLAY VIDEO" button</strong> - Does it start playing?</li>
+                <li><strong>Check the status info</strong> - What does it say?</li>
+                <li><strong>Read the console log</strong> - Any errors?</li>
+            </ol>
+        </div>
+
+        <div class="video-section">
+            <video id="testVideo" controls>
+                <source src="video-bg.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="controls">
+            <button onclick="playVideo()">▶️ PLAY VIDEO</button>
+            <button onclick="pauseVideo()">⏸️ PAUSE</button>
+            <button onclick="reloadVideo()">🔄 RELOAD</button>
+            <button onclick="muteToggle()">🔊 MUTE/UNMUTE</button>
+            <button onclick="testFullscreen()">⛶ FULLSCREEN</button>
+            <button onclick="window.location.href='index.html'" style="background: #7A1E24; color: white;">← BACK TO SITE</button>
+        </div>
+
+        <div class="status">
+            <h3>📊 Video Status:</h3>
+            <div class="status-item">File: <strong id="videoFile">Checking...</strong></div>
+            <div class="status-item">Ready State: <strong id="readyState">Checking...</strong></div>
+            <div class="status-item">Network State: <strong id="networkState">Checking...</strong></div>
+            <div class="status-item">Duration: <strong id="duration">Checking...</strong></div>
+            <div class="status-item">Dimensions: <strong id="dimensions">Checking...</strong></div>
+            <div class="status-item">Current Time: <strong id="currentTime">0:00</strong></div>
+            <div class="status-item">Paused: <strong id="paused">Checking...</strong></div>
+            <div class="status-item">Muted: <strong id="muted">Checking...</strong></div>
+            <div class="status-item">Volume: <strong id="volume">Checking...</strong></div>
+            <div class="status-item">Playback Rate: <strong id="playbackRate">Checking...</strong></div>
+            <div class="status-item" id="errorStatus">Errors: <span class="success">None</span></div>
+        </div>
+
+        <div class="log" id="consoleLog">
+            <strong>Console Log:</strong><br>
+            Initializing...
+        </div>
+
+        <div class="info">
+            <h3>💡 What This Test Shows:</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>If video shows BLACK → Your browser can't decode this video format</li>
+                <li>If video shows ERROR → File is corrupted or wrong path</li>
+                <li>If video shows VIDEO → Everything is working! Click PLAY.</li>
+                <li>If controls are disabled → Video hasn't loaded yet</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <h3>🔧 Solutions:</h3>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li><strong>If video plays here but not on main site:</strong> The main site code needs a small fix</li>
+                <li><strong>If video doesn't play here either:</strong> Video needs to be converted to web-compatible format</li>
+                <li><strong>If you see error messages:</strong> Tell me what they say!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('testVideo');
+        const log = document.getElementById('consoleLog');
+
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'success' ? '#C7FF38' : '#F4F0E8';
+            log.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus() {
+            document.getElementById('videoFile').textContent = video.currentSrc || 'Not loaded';
+
+            const readyStates = ['HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_CURRENT_DATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA'];
+            document.getElementById('readyState').textContent = readyStates[video.readyState] || video.readyState;
+
+            const networkStates = ['NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE'];
+            document.getElementById('networkState').textContent = networkStates[video.networkState] || video.networkState;
+
+            document.getElementById('duration').textContent = video.duration ? video.duration.toFixed(2) + 's' : 'Unknown';
+            document.getElementById('dimensions').textContent = `${video.videoWidth}x${video.videoHeight}`;
+            document.getElementById('paused').textContent = video.paused ? 'YES' : 'NO';
+            document.getElementById('muted').textContent = video.muted ? 'YES' : 'NO';
+            document.getElementById('volume').textContent = (video.volume * 100).toFixed(0) + '%';
+            document.getElementById('playbackRate').textContent = video.playbackRate + 'x';
+
+            const mins = Math.floor(video.currentTime / 60);
+            const secs = Math.floor(video.currentTime % 60);
+            document.getElementById('currentTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function playVideo() {
+            addLog('Attempting to play video...', 'info');
+            video.play().then(() => {
+                addLog('✅ Video playing successfully!', 'success');
+            }).catch(err => {
+                addLog('❌ Play failed: ' + err.message, 'error');
+                alert('Play failed: ' + err.message);
+            });
+        }
+
+        function pauseVideo() {
+            video.pause();
+            addLog('Video paused', 'info');
+        }
+
+        function reloadVideo() {
+            addLog('Reloading video...', 'info');
+            video.load();
+            setTimeout(() => {
+                playVideo();
+            }, 500);
+        }
+
+        function muteToggle() {
+            video.muted = !video.muted;
+            addLog(video.muted ? 'Video muted' : 'Video unmuted', 'info');
+        }
+
+        function testFullscreen() {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            }
+        }
+
+        // Event listeners
+        video.addEventListener('loadstart', () => {
+            addLog('📥 Video loading started', 'info');
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            addLog('✅ Metadata loaded: ' + video.duration.toFixed(2) + 's, ' + video.videoWidth + 'x' + video.videoHeight, 'success');
+            updateStatus();
+        });
+
+        video.addEventListener('loadeddata', () => {
+            addLog('✅ Video data loaded', 'success');
+        });
+
+        video.addEventListener('canplay', () => {
+            addLog('✅ Video can play', 'success');
+        });
+
+        video.addEventListener('canplaythrough', () => {
+            addLog('✅ Video can play through', 'success');
+        });
+
+        video.addEventListener('playing', () => {
+            addLog('▶️ Video is playing', 'success');
+        });
+
+        video.addEventListener('pause', () => {
+            addLog('⏸️ Video paused', 'info');
+        });
+
+        video.addEventListener('ended', () => {
+            addLog('⏹️ Video ended', 'info');
+        });
+
+        video.addEventListener('error', (e) => {
+            const errors = [
+                'MEDIA_ERR_ABORTED - Loading aborted by user',
+                'MEDIA_ERR_NETWORK - Network error during download',
+                'MEDIA_ERR_DECODE - Error decoding video (wrong codec/corrupted)',
+                'MEDIA_ERR_SRC_NOT_SUPPORTED - Video format not supported by browser'
+            ];
+
+            const errorMsg = video.error ? errors[video.error.code - 1] || 'Unknown error' : 'Unknown error';
+
+            addLog('❌ VIDEO ERROR: ' + errorMsg, 'error');
+            document.getElementById('errorStatus').innerHTML = '<span class="error">ERROR: ' + errorMsg + '</span>';
+        });
+
+        video.addEventListener('timeupdate', () => {
+            updateStatus();
+        });
+
+        // Initial load
+        addLog('🎬 Diagnostic page loaded', 'info');
+        addLog('Video source: ' + video.querySelector('source').src, 'info');
+
+        setTimeout(() => {
+            updateStatus();
+            if (video.readyState === 0) {
+                addLog('⚠️ Video not loading. Check file path or format.', 'error');
+            }
+        }, 2000);
+
+        // Update status every second
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>
