@@ -7,7 +7,8 @@ const state = {
     products: [],
     videoEntered: false,
     videoPlaying: false,
-    videoMuted: true
+    videoMuted: true,
+    previewOpen: false
 };
 
 // ===== VIDEO HERO FUNCTIONALITY =====
@@ -17,92 +18,55 @@ const videoProgressBar = document.getElementById('videoProgressBar');
 const videoRippleContainer = document.getElementById('videoRippleContainer');
 const productHotspotsContainer = document.getElementById('productHotspots');
 
-// FORCE video to autoplay immediately
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const isSlowConnection = !!(navigator.connection &&
+    (navigator.connection.effectiveType === 'slow-2g' || navigator.connection.effectiveType === '2g' || navigator.connection.saveData));
+
+// Autoplay the background video (falls back to the poster image when the
+// user prefers reduced motion or is on a very slow connection)
 if (heroVideo) {
-    console.log('🎬 Initializing video autoplay...');
+    let hotspotsInitialized = false;
 
-    // Set video properties
-    heroVideo.muted = true;
-    heroVideo.loop = true;
-    heroVideo.autoplay = true;
-    heroVideo.playsInline = true;
-
-    // Force load
-    heroVideo.load();
-
-    // Attempt 1: Immediate play
-    setTimeout(() => {
-        heroVideo.play()
-            .then(() => {
-                console.log('✅ Video autoplaying successfully!');
-                state.videoPlaying = true;
-                state.videoEntered = true;
-                initializeHotspots();
-            })
-            .catch(err => {
-                console.log('⚠️ Attempt 1 failed:', err.message);
-
-                // Attempt 2: Try again after short delay
-                setTimeout(() => {
-                    heroVideo.play()
-                        .then(() => {
-                            console.log('✅ Video playing (attempt 2)');
-                            state.videoPlaying = true;
-                            state.videoEntered = true;
-                            initializeHotspots();
-                        })
-                        .catch(err2 => {
-                            console.log('⚠️ Attempt 2 failed:', err2.message);
-
-                            // Attempt 3: Wait for any user interaction
-                            console.log('💡 Click anywhere on the page to start video');
-
-                            const startVideo = () => {
-                                heroVideo.play()
-                                    .then(() => {
-                                        console.log('✅ Video started after user interaction');
-                                        state.videoPlaying = true;
-                                        state.videoEntered = true;
-                                        initializeHotspots();
-
-                                        // Remove listeners
-                                        document.removeEventListener('click', startVideo);
-                                        document.removeEventListener('touchstart', startVideo);
-                                        document.removeEventListener('keydown', startVideo);
-                                    })
-                                    .catch(err3 => {
-                                        console.error('❌ Failed to play video:', err3);
-                                    });
-                            };
-
-                            // Listen for ANY user interaction
-                            document.addEventListener('click', startVideo, { once: true });
-                            document.addEventListener('touchstart', startVideo, { once: true });
-                            document.addEventListener('keydown', startVideo, { once: true });
-                        });
-                }, 500);
-            });
-    }, 100);
-
-    // Also try on video canplay event
-    heroVideo.addEventListener('canplay', () => {
-        if (heroVideo.paused && !state.videoPlaying) {
-            console.log('🎬 Video can play - attempting autoplay...');
-            heroVideo.play().catch(err => {
-                console.log('Autoplay still blocked');
-            });
+    const onVideoStarted = () => {
+        state.videoPlaying = true;
+        state.videoEntered = true;
+        if (!hotspotsInitialized) {
+            hotspotsInitialized = true;
+            initializeHotspots();
         }
-    });
+    };
 
-    // Try on canplaythrough event
-    heroVideo.addEventListener('canplaythrough', () => {
-        if (heroVideo.paused && !state.videoPlaying) {
-            console.log('🎬 Video fully loaded - attempting autoplay...');
-            heroVideo.play().catch(err => {
-                console.log('Autoplay still blocked');
-            });
-        }
-    });
+    if (prefersReducedMotion.matches || isSlowConnection) {
+        heroVideo.removeAttribute('autoplay');
+        heroVideo.pause();
+        state.videoEntered = true;
+    } else {
+        heroVideo.muted = true;
+        heroVideo.loop = true;
+        heroVideo.playsInline = true;
+
+        const tryPlay = () => heroVideo.play().then(onVideoStarted);
+
+        tryPlay().catch(() => {
+            // Retry once after a short delay, then wait for any user interaction
+            setTimeout(() => {
+                tryPlay().catch(() => {
+                    const startVideo = () => {
+                        tryPlay().catch(() => { /* keep showing the poster */ });
+                    };
+                    document.addEventListener('click', startVideo, { once: true });
+                    document.addEventListener('touchstart', startVideo, { once: true });
+                    document.addEventListener('keydown', startVideo, { once: true });
+                });
+            }, 500);
+        });
+
+        heroVideo.addEventListener('canplay', () => {
+            if (heroVideo.paused && !state.videoPlaying) {
+                tryPlay().catch(() => { /* autoplay blocked; poster stays visible */ });
+            }
+        });
+    }
 }
 
 // Video Progress Bar
@@ -125,9 +89,9 @@ if (heroVideo && videoRippleContainer) {
         if (timeDiff < 300) {
             // Double click - replay
             heroVideo.currentTime = 0;
-            heroVideo.play();
-            state.videoPlaying = true;
-            updatePlayPauseIcon();
+            heroVideo.play().then(() => {
+                state.videoPlaying = true;
+            }).catch(() => { /* playback blocked */ });
         } else {
             // Single click - create ripple
             createRipple(e.clientX, e.clientY);
@@ -170,47 +134,58 @@ function initializeHotspots() {
         }
     ];
 
-    let activeHotspots = [];
+    const activeHotspots = new Set();
 
     heroVideo.addEventListener('timeupdate', () => {
         const currentTime = heroVideo.currentTime;
 
         hotspots.forEach((hotspot, index) => {
+            if (!hotspot.product) return;
+
             if (currentTime >= hotspot.time && currentTime < hotspot.time + 5) {
-                if (!activeHotspots.includes(index)) {
-                    createHotspot(hotspot);
-                    activeHotspots.push(index);
+                if (!activeHotspots.has(index)) {
+                    createHotspot(hotspot, index);
+                    activeHotspots.add(index);
                 }
-            } else if (currentTime >= hotspot.time + 5) {
+            } else {
                 const existingHotspot = document.getElementById(`hotspot-${index}`);
                 if (existingHotspot) {
                     existingHotspot.remove();
-                    activeHotspots = activeHotspots.filter(i => i !== index);
+                    activeHotspots.delete(index);
                 }
             }
         });
     });
 }
 
-function createHotspot(hotspotData) {
+function createHotspot(hotspotData, index) {
     const hotspot = document.createElement('div');
     hotspot.className = 'product-hotspot';
-    hotspot.id = `hotspot-${Date.now()}`;
+    hotspot.id = `hotspot-${index}`;
     hotspot.style.top = hotspotData.position.top;
     hotspot.style.left = hotspotData.position.left;
 
     hotspot.innerHTML = `
         <div class="hotspot-indicator">
-            <svg viewBox="0 0 24 24" fill="none">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
         </div>
         <div class="hotspot-label">SHOP THE LOOK</div>
     `;
+    hotspot.setAttribute('role', 'button');
+    hotspot.setAttribute('tabindex', '0');
+    hotspot.setAttribute('aria-label', `Shop the look: ${hotspotData.product.name}`);
 
     hotspot.addEventListener('click', () => {
         openHotspotPreview(hotspotData.product);
+    });
+    hotspot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openHotspotPreview(hotspotData.product);
+        }
     });
 
     productHotspotsContainer.appendChild(hotspot);
@@ -220,7 +195,7 @@ function openHotspotPreview(product) {
     // Pause video gently
     heroVideo.pause();
     state.videoPlaying = false;
-    updatePlayPauseIcon();
+    state.previewOpen = true;
 
     // Create preview
     const preview = document.createElement('div');
@@ -234,10 +209,19 @@ function openHotspotPreview(product) {
         </div>
         <div class="hotspot-preview-price">$${product.price}</div>
         <div class="hotspot-preview-actions">
-            <button class="btn btn-primary" onclick="addToCart(${product.id}); closeHotspotPreview();">ADD TO BAG</button>
-            <button class="btn btn-secondary" onclick="openQuickView(${product.id}); closeHotspotPreview();">VIEW ITEM</button>
+            <button class="btn btn-primary" data-action="add">ADD TO BAG</button>
+            <button class="btn btn-secondary" data-action="view">VIEW ITEM</button>
         </div>
     `;
+
+    preview.querySelector('[data-action="add"]').addEventListener('click', () => {
+        addToCart(product.id);
+        closeHotspotPreview();
+    });
+    preview.querySelector('[data-action="view"]').addEventListener('click', () => {
+        closeHotspotPreview();
+        openQuickView(product.id);
+    });
 
     document.body.appendChild(preview);
     setTimeout(() => preview.classList.add('active'), 10);
@@ -252,15 +236,19 @@ function openHotspotPreview(product) {
 
 function closeHotspotPreview() {
     const preview = document.querySelector('.hotspot-preview');
-    if (preview) {
-        preview.classList.remove('active');
-        setTimeout(() => preview.remove(), 400);
-    }
+    if (!preview) return;
 
-    // Resume video
-    heroVideo.play();
-    state.videoPlaying = true;
-    updatePlayPauseIcon();
+    preview.classList.remove('active');
+    setTimeout(() => preview.remove(), 400);
+
+    state.previewOpen = false;
+
+    // Resume video unless the user prefers reduced motion
+    if (!prefersReducedMotion.matches) {
+        heroVideo.play().then(() => {
+            state.videoPlaying = true;
+        }).catch(() => { /* playback blocked */ });
+    }
 }
 
 // Mouse Parallax Effect on Hero Interface
@@ -291,7 +279,7 @@ if (heroInterface) {
 let heroScrollTicking = false;
 
 window.addEventListener('scroll', () => {
-    if (!heroScrollTicking && state.videoEntered) {
+    if (!heroScrollTicking && state.videoEntered && heroVideo) {
         window.requestAnimationFrame(() => {
             const hero = document.querySelector('.hero.video-hero');
             const scrolled = window.pageYOffset;
@@ -319,17 +307,20 @@ window.addEventListener('scroll', () => {
                     heroSubtitle.style.opacity = 1 - scrollProgress;
                 }
 
-                // Pause video when scrolled away
+                // Pause video when mostly scrolled away, resume when back near the top
                 if (scrollProgress > 0.8 && state.videoPlaying) {
                     heroVideo.pause();
                     state.videoPlaying = false;
+                } else if (scrollProgress <= 0.5 && !state.videoPlaying &&
+                           !state.previewOpen && !document.hidden && !prefersReducedMotion.matches) {
+                    heroVideo.play().then(() => {
+                        state.videoPlaying = true;
+                    }).catch(() => { /* playback blocked */ });
                 }
-            } else {
-                // Resume video when returning to hero
-                if (!state.videoPlaying && scrolled < heroHeight * 0.5) {
-                    heroVideo.play();
-                    state.videoPlaying = true;
-                }
+            } else if (state.videoPlaying) {
+                // Fully below the hero: make sure the video is not playing
+                heroVideo.pause();
+                state.videoPlaying = false;
             }
 
             heroScrollTicking = false;
@@ -339,32 +330,22 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Pause video when tab is inactive
+// Pause video when tab is inactive, resume when it becomes visible again
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden && state.videoPlaying) {
-        heroVideo.pause();
-    } else if (!document.hidden && state.videoEntered) {
-        heroVideo.play();
+    if (!heroVideo) return;
+
+    if (document.hidden) {
+        if (state.videoPlaying) {
+            heroVideo.pause();
+            state.videoPlaying = false;
+        }
+    } else if (state.videoEntered && !state.previewOpen && !prefersReducedMotion.matches &&
+               window.pageYOffset < window.innerHeight * 0.8) {
+        heroVideo.play().then(() => {
+            state.videoPlaying = true;
+        }).catch(() => { /* playback blocked */ });
     }
 });
-
-// Respect prefers-reduced-motion
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    heroVideo.pause();
-    const poster = heroVideo.getAttribute('poster');
-    if (poster) {
-        heroVideo.style.backgroundImage = `url(${poster})`;
-    }
-}
-
-// Detect slow connection and use poster
-if (navigator.connection) {
-    const connection = navigator.connection;
-    if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
-        heroVideo.removeAttribute('autoplay');
-        heroVideo.poster = heroVideo.getAttribute('poster');
-    }
-}
 
 // Hero Cart Button
 const heroCartBtn = document.getElementById('heroCartBtn');
@@ -432,7 +413,7 @@ const sampleProducts = [
         size: 'L',
         condition: 'Excellent',
         era: '1980s',
-        images: ['https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600', 'https://images.unsplash.com/photo-1520367745676-56196527d0b7?w=600'],
+        images: ['https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600', 'https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600'],
         description: 'Genuine leather bomber from the 80s. Rich patina, fully functional zippers, quilted lining.',
         fabric: 'Genuine Leather',
         fit: 'Oversized Fit'
@@ -445,7 +426,7 @@ const sampleProducts = [
         size: 'L',
         condition: 'Excellent',
         era: '1990s',
-        images: ['https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=600', 'https://images.unsplash.com/photo-1598032895397-e41b0c9ea026?w=600'],
+        images: ['https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=600', 'https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=600'],
         description: 'Classic 90s flannel in perfect condition. Heavy-duty cotton that gets softer with every wear.',
         fabric: '100% Cotton Flannel',
         fit: 'Regular Fit'
@@ -496,23 +477,33 @@ document.addEventListener('mousemove', (e) => {
     cursor.style.top = e.clientY + 'px';
 });
 
-// Cursor hover effects
-document.querySelectorAll('a, button, .product-card, .category-item').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-        cursor.classList.add('hover');
-        if (el.classList.contains('product-card')) {
-            cursorText.textContent = 'VIEW';
-        } else if (el.classList.contains('category-item')) {
-            cursorText.textContent = 'EXPLORE';
-        } else if (el.tagName === 'BUTTON') {
-            cursorText.textContent = 'CLICK';
-        }
-    });
+// Cursor hover effects (event delegation so dynamically rendered
+// elements like product cards get the effect too)
+const CURSOR_TARGETS = 'a, button, .product-card, .category-item';
 
-    el.addEventListener('mouseleave', () => {
-        cursor.classList.remove('hover');
+document.addEventListener('mouseover', (e) => {
+    const el = e.target.closest(CURSOR_TARGETS);
+    if (!el) return;
+
+    cursor.classList.add('hover');
+    if (el.classList.contains('product-card')) {
+        cursorText.textContent = 'VIEW';
+    } else if (el.classList.contains('category-item')) {
+        cursorText.textContent = 'EXPLORE';
+    } else if (el.tagName === 'BUTTON') {
+        cursorText.textContent = 'CLICK';
+    } else {
         cursorText.textContent = '';
-    });
+    }
+});
+
+document.addEventListener('mouseout', (e) => {
+    const el = e.target.closest(CURSOR_TARGETS);
+    if (!el) return;
+    if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(CURSOR_TARGETS) === el) return;
+
+    cursor.classList.remove('hover');
+    cursorText.textContent = '';
 });
 
 // ===== NAVIGATION =====
@@ -535,16 +526,23 @@ window.addEventListener('scroll', () => {
 const menuToggle = document.getElementById('menuToggle');
 const mobileMenu = document.getElementById('mobileMenu');
 
+function setMobileMenu(open) {
+    mobileMenu.classList.toggle('active', open);
+    menuToggle.classList.toggle('active', open);
+    menuToggle.setAttribute('aria-expanded', String(open));
+    if (!open && mobileMenu.contains(document.activeElement)) {
+        menuToggle.focus();
+    }
+}
+
 menuToggle.addEventListener('click', () => {
-    mobileMenu.classList.toggle('active');
-    menuToggle.classList.toggle('active');
+    setMobileMenu(!mobileMenu.classList.contains('active'));
 });
 
 // Close mobile menu on link click
 document.querySelectorAll('.mobile-nav-link').forEach(link => {
     link.addEventListener('click', () => {
-        mobileMenu.classList.remove('active');
-        menuToggle.classList.remove('active');
+        setMobileMenu(false);
     });
 });
 
@@ -569,17 +567,30 @@ if (hero) {
 }
 
 // ===== PRODUCTS RENDERING =====
+const fineAndAnimated = () =>
+    window.matchMedia('(pointer: fine)').matches && !prefersReducedMotion.matches;
+
 function renderProducts(products, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    if (products.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <p>No pieces available in this selection right now.</p>
+                <p>One-of-one items go fast — check back soon.</p>
+            </div>
+        `;
+        return;
+    }
+
     container.innerHTML = products.map(product => `
-        <div class="product-card" data-product-id="${product.id}">
+        <div class="product-card" data-product-id="${product.id}" tabindex="0" role="button" aria-label="View ${product.name}">
             <div class="product-image">
-                <img src="${product.images[0]}" alt="${product.name}">
-                ${product.images[1] ? `<img class="product-image-alt" src="${product.images[1]}" alt="${product.name}">` : ''}
-                <button class="product-wishlist" data-product-id="${product.id}" aria-label="Add to wishlist">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <img src="${product.images[0]}" alt="${product.name}" loading="lazy" decoding="async">
+                ${product.images[1] ? `<img class="product-image-alt" src="${product.images[1]}" alt="" loading="lazy" decoding="async">` : ''}
+                <button class="product-wishlist ${state.wishlist.includes(product.id) ? 'active' : ''}" data-product-id="${product.id}" aria-label="Toggle wishlist for ${product.name}">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                         <path d="M10 17.5L2 9.5C0.5 8 0.5 5.5 2 4C3.5 2.5 6 2.5 7.5 4L10 6.5L12.5 4C14 2.5 16.5 2.5 18 4C19.5 5.5 19.5 8 18 9.5L10 17.5Z" stroke="currentColor" stroke-width="2"/>
                     </svg>
                 </button>
@@ -594,7 +605,7 @@ function renderProducts(products, containerId) {
                 </div>
                 <div class="product-price">$${product.price}</div>
                 <div class="product-actions">
-                    <button class="quick-add" data-product-id="${product.id}">QUICK ADD</button>
+                    <button class="quick-add" data-product-id="${product.id}" aria-label="Add ${product.name} to bag">QUICK ADD</button>
                 </div>
             </div>
         </div>
@@ -608,6 +619,29 @@ function renderProducts(products, containerId) {
                 openQuickView(productId);
             }
         });
+
+        card.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('button')) {
+                e.preventDefault();
+                openQuickView(parseInt(card.dataset.productId));
+            }
+        });
+
+        // 3D tilt effect, only for mouse users without reduced motion
+        if (fineAndAnimated()) {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const rotateX = (y - rect.height / 2) / 20;
+                const rotateY = (rect.width / 2 - x) / 20;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        }
     });
 
     container.querySelectorAll('.product-wishlist').forEach(btn => {
@@ -615,7 +649,7 @@ function renderProducts(products, containerId) {
             e.stopPropagation();
             const productId = parseInt(btn.dataset.productId);
             toggleWishlist(productId);
-            btn.classList.toggle('active');
+            btn.classList.toggle('active', state.wishlist.includes(productId));
         });
     });
 
@@ -641,7 +675,7 @@ categories.forEach(category => {
         const categoryName = category.dataset.category;
         const categoryImages = {
             'oversized-tees': 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400',
-            'vintage-shirts': 'https://images.unsplash.com/photo-1598032895397-e41b0c9ea026?w=400',
+            'vintage-shirts': 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400',
             'hoodies': 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400',
             'jackets': 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400',
             'denim': 'https://images.unsplash.com/photo-1582552938357-32b906d8e6a0?w=400',
@@ -655,12 +689,13 @@ categories.forEach(category => {
     });
 
     category.addEventListener('click', () => {
-        // Filter products by category
-        const categoryName = category.querySelector('h3').textContent;
+        // Filter products by category (case-insensitive: the headings are
+        // uppercase while the product data uses title case)
+        const categoryName = category.querySelector('h3').textContent.trim().toUpperCase();
         window.location.hash = 'new-drop';
         setTimeout(() => {
             renderProducts(
-                state.products.filter(p => p.category === categoryName),
+                state.products.filter(p => p.category.toUpperCase() === categoryName),
                 'newDropGrid'
             );
         }, 300);
@@ -669,41 +704,24 @@ categories.forEach(category => {
 
 // ===== PRODUCT ORBIT =====
 const orbitTrack = document.getElementById('orbitTrack');
+const orbitContainer = document.getElementById('productOrbit');
 const orbitPrev = document.querySelector('.orbit-prev');
 const orbitNext = document.querySelector('.orbit-next');
 
 let orbitAngle = 0;
 let orbitItems = [];
 
-function initOrbit() {
-    if (!orbitTrack) return;
-
-    const orbitProducts = state.products.slice(0, 8);
-    const radius = 250;
-    const angleStep = (Math.PI * 2) / orbitProducts.length;
-
-    orbitProducts.forEach((product, index) => {
-        const angle = angleStep * index;
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-
-        const item = document.createElement('div');
-        item.className = 'orbit-item';
-        item.style.transform = `translate(${x}px, ${y}px)`;
-        item.innerHTML = `<img src="${product.images[0]}" alt="${product.name}">`;
-        item.addEventListener('click', () => openQuickView(product.id));
-
-        orbitTrack.appendChild(item);
-        orbitItems.push({ element: item, angle: angle, product: product });
-    });
+// Radius adapts to the container so items stay inside small viewports
+function getOrbitRadius() {
+    if (!orbitContainer) return 250;
+    const itemWidth = orbitContainer.querySelector('.orbit-item')?.offsetWidth || 200;
+    const available = Math.min(orbitContainer.clientWidth, window.innerWidth) - itemWidth;
+    return Math.max(120, Math.min(250, available / 2));
 }
 
-function rotateOrbit(direction) {
-    const angleStep = (Math.PI * 2) / orbitItems.length;
-    orbitAngle += direction * angleStep;
-
-    const radius = 250;
-    orbitItems.forEach((item, index) => {
+function layoutOrbit() {
+    const radius = getOrbitRadius();
+    orbitItems.forEach((item) => {
         const angle = item.angle + orbitAngle;
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
@@ -715,15 +733,72 @@ function rotateOrbit(direction) {
     });
 }
 
+function initOrbit() {
+    if (!orbitTrack) return;
+
+    const orbitProducts = state.products.slice(0, 8);
+    const angleStep = (Math.PI * 2) / orbitProducts.length;
+
+    orbitProducts.forEach((product, index) => {
+        const angle = angleStep * index;
+
+        const item = document.createElement('div');
+        item.className = 'orbit-item';
+        item.innerHTML = `<img src="${product.images[0]}" alt="${product.name}" loading="lazy" decoding="async">`;
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `View ${product.name}`);
+        item.addEventListener('click', () => openQuickView(product.id));
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openQuickView(product.id);
+            }
+        });
+
+        orbitTrack.appendChild(item);
+        orbitItems.push({ element: item, angle: angle, product: product });
+    });
+
+    layoutOrbit();
+}
+
+function rotateOrbit(direction) {
+    if (orbitItems.length === 0) return;
+    const angleStep = (Math.PI * 2) / orbitItems.length;
+    orbitAngle += direction * angleStep;
+    layoutOrbit();
+}
+
 if (orbitPrev) orbitPrev.addEventListener('click', () => rotateOrbit(-1));
 if (orbitNext) orbitNext.addEventListener('click', () => rotateOrbit(1));
 
 initOrbit();
 
-// Auto-rotate orbit
-setInterval(() => {
-    rotateOrbit(0.01);
-}, 50);
+// Re-layout the orbit when the viewport size changes
+let orbitResizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(orbitResizeTimer);
+    orbitResizeTimer = setTimeout(layoutOrbit, 150);
+});
+
+// Auto-rotate the orbit only while it is on screen and motion is allowed
+if (orbitContainer && !prefersReducedMotion.matches) {
+    let orbitRotateTimer = null;
+
+    const orbitVisibilityObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !orbitRotateTimer) {
+                orbitRotateTimer = setInterval(() => rotateOrbit(0.01), 50);
+            } else if (!entry.isIntersecting && orbitRotateTimer) {
+                clearInterval(orbitRotateTimer);
+                orbitRotateTimer = null;
+            }
+        });
+    }, { threshold: 0.1 });
+
+    orbitVisibilityObserver.observe(orbitContainer);
+}
 
 // ===== FEATURED ARCHIVE SCROLL =====
 if (typeof gsap !== 'undefined' && gsap.registerPlugin) {
@@ -771,10 +846,18 @@ if (typeof gsap !== 'undefined' && gsap.registerPlugin) {
 }
 
 // ===== LOOKBOOK HORIZONTAL SCROLL =====
+// Convert vertical wheel input into horizontal scrolling, but release the
+// page (no preventDefault) once the lookbook reaches either end so the
+// user is never trapped inside the section.
 const lookbookContainer = document.querySelector('.lookbook-scroll-container');
 if (lookbookContainer) {
     lookbookContainer.addEventListener('wheel', (e) => {
-        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+
+        const atStart = lookbookContainer.scrollLeft <= 0;
+        const atEnd = lookbookContainer.scrollLeft + lookbookContainer.clientWidth >= lookbookContainer.scrollWidth - 1;
+
+        if ((e.deltaY > 0 && !atEnd) || (e.deltaY < 0 && !atStart)) {
             e.preventDefault();
             lookbookContainer.scrollLeft += e.deltaY;
         }
@@ -829,10 +912,10 @@ function addToCart(productId) {
     const product = state.products.find(p => p.id === productId);
     if (!product) return;
 
-    // Check if already in cart
+    // One-of-one pieces: each item can only be in the bag once
     const existingItem = state.cart.find(item => item.id === productId);
     if (existingItem) {
-        alert('This item is already in your bag!');
+        showNotification('This one-of-one piece is already in your bag!');
         return;
     }
 
@@ -848,9 +931,19 @@ function removeFromCart(productId) {
     updateCart();
 }
 
+function persistState() {
+    try {
+        localStorage.setItem('thriftHolicCart', JSON.stringify(state.cart.map(item => ({ id: item.id }))));
+        localStorage.setItem('thriftHolicWishlist', JSON.stringify(state.wishlist));
+    } catch (err) {
+        // Storage unavailable (private mode / quota) - carry on without persistence
+    }
+}
+
 function updateCart() {
     cartCount.textContent = state.cart.length;
     updateHeroCartCount(); // Update hero cart count too
+    persistState();
 
     if (state.cart.length === 0) {
         cartItems.innerHTML = `
@@ -866,12 +959,12 @@ function updateCart() {
     } else {
         cartItems.innerHTML = state.cart.map(item => `
             <div class="cart-item">
-                <img src="${item.images[0]}" alt="${item.name}" class="cart-item-image">
+                <img src="${item.images[0]}" alt="${item.name}" class="cart-item-image" loading="lazy" decoding="async">
                 <div class="cart-item-details">
                     <div class="cart-item-name">${item.name}</div>
                     <div class="cart-item-meta">Size ${item.size} • ${item.condition}</div>
                     <div class="cart-item-price">$${item.price}</div>
-                    <button class="cart-item-remove" data-product-id="${item.id}">Remove</button>
+                    <button class="cart-item-remove" data-product-id="${item.id}" aria-label="Remove ${item.name} from bag">Remove</button>
                 </div>
             </div>
         `).join('');
@@ -898,6 +991,17 @@ closeCart.addEventListener('click', () => {
     cartDrawer.classList.remove('active');
 });
 
+// Checkout (this demo store has no payment backend)
+const checkoutBtn = document.getElementById('checkoutBtn');
+if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+        if (checkoutBtn.disabled) return;
+        checkoutBtn.disabled = true;
+        showNotification('Checkout is coming soon — this demo does not process payments yet.');
+        setTimeout(() => { checkoutBtn.disabled = false; }, 2000);
+    });
+}
+
 // ===== WISHLIST FUNCTIONALITY =====
 const wishlistBtn = document.getElementById('wishlistBtn');
 const wishlistDrawer = document.getElementById('wishlistDrawer');
@@ -921,6 +1025,7 @@ function toggleWishlist(productId) {
 
 function updateWishlist() {
     wishlistCount.textContent = state.wishlist.length;
+    persistState();
 
     if (state.wishlist.length === 0) {
         wishlistItems.innerHTML = `
@@ -990,6 +1095,35 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('quickViewModal').classList.remove('active');
         cartDrawer.classList.remove('active');
         wishlistDrawer.classList.remove('active');
+        closeHotspotPreview();
+        if (mobileMenu.classList.contains('active')) {
+            setMobileMenu(false);
+        }
+    }
+});
+
+// Keep keyboard focus inside whichever modal or drawer is currently open
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+
+    const openLayer = document.querySelector('.modal.active .modal-content, .drawer.active .drawer-content, .hotspot-preview.active, .mobile-menu.active');
+    if (!openLayer) return;
+
+    const focusables = openLayer.querySelectorAll('a[href], button:not([disabled]), input, [tabindex="0"]');
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (!openLayer.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+    } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
     }
 });
 
@@ -1028,14 +1162,24 @@ function openQuickView(productId) {
                     <p style="margin-top: 1rem; color: var(--faded-burgundy); font-weight: 600;">⚠ ONLY ONE AVAILABLE</p>
                 </div>
                 <div class="quick-view-actions">
-                    <button class="btn btn-primary btn-block" onclick="addToCart(${product.id}); document.getElementById('quickViewModal').classList.remove('active');">ADD TO BAG</button>
-                    <button class="btn btn-secondary" onclick="toggleWishlist(${product.id}); this.textContent = state.wishlist.includes(${product.id}) ? 'REMOVE FROM WISHLIST' : 'ADD TO WISHLIST';">
+                    <button class="btn btn-primary btn-block" data-action="add-to-bag">ADD TO BAG</button>
+                    <button class="btn btn-secondary" data-action="toggle-wishlist">
                         ${state.wishlist.includes(product.id) ? 'REMOVE FROM WISHLIST' : 'ADD TO WISHLIST'}
                     </button>
                 </div>
             </div>
         </div>
     `;
+
+    quickViewContent.querySelector('[data-action="add-to-bag"]').addEventListener('click', () => {
+        addToCart(product.id);
+        quickViewModal.classList.remove('active');
+    });
+
+    quickViewContent.querySelector('[data-action="toggle-wishlist"]').addEventListener('click', (e) => {
+        toggleWishlist(product.id);
+        e.currentTarget.textContent = state.wishlist.includes(product.id) ? 'REMOVE FROM WISHLIST' : 'ADD TO WISHLIST';
+    });
 
     // Thumbnail click handlers
     quickViewContent.querySelectorAll('.quick-view-thumbnail').forEach(thumb => {
@@ -1048,6 +1192,8 @@ function openQuickView(productId) {
     });
 
     quickViewModal.classList.add('active');
+    const quickViewCloseBtn = document.getElementById('closeQuickView');
+    if (quickViewCloseBtn) quickViewCloseBtn.focus();
 }
 
 closeQuickView.addEventListener('click', () => {
@@ -1059,11 +1205,16 @@ const newsletterForm = document.getElementById('newsletterForm');
 
 newsletterForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = e.target.querySelector('input[type="email"]').value;
 
-    // Simulate form submission
+    // Prevent rapid repeat submissions
+    const submitBtn = newsletterForm.querySelector('button[type="submit"]');
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+
+    // Simulate form submission (no backend is connected yet)
     showNotification('Welcome to the cult! Check your email for exclusive drops.');
     e.target.reset();
+    setTimeout(() => { submitBtn.disabled = false; }, 2000);
 });
 
 // ===== NOTIFICATION SYSTEM =====
@@ -1120,7 +1271,16 @@ document.head.appendChild(style);
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         const href = this.getAttribute('href');
-        if (href === '#' || href === '#hero') return;
+
+        // Placeholder links (footer pages not built yet): stop the default
+        // jump-to-top and tell the user instead of silently doing nothing
+        if (href === '#') {
+            e.preventDefault();
+            showNotification(`${this.textContent.trim()} is coming soon.`);
+            return;
+        }
+
+        if (href === '#hero') return;
 
         e.preventDefault();
         const target = document.querySelector(href);
@@ -1129,7 +1289,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             const offsetTop = target.offsetTop - 100;
             window.scrollTo({
                 top: offsetTop,
-                behavior: 'smooth'
+                behavior: prefersReducedMotion.matches ? 'auto' : 'smooth'
             });
         }
     });
@@ -1229,31 +1389,12 @@ if (lookbookTrack) {
     });
 }
 
-// ===== PRODUCT CARD TILT EFFECT =====
-document.addEventListener('mousemove', (e) => {
-    document.querySelectorAll('.product-card').forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
-
-        if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-        } else {
-            card.style.transform = '';
-        }
-    });
-});
-
 // ===== ACCESSIBILITY - KEYBOARD NAVIGATION =====
-document.querySelectorAll('.product-card, .category-item, .orbit-item').forEach(el => {
+// (Product cards and orbit items get their keyboard handlers when rendered)
+document.querySelectorAll('.category-item').forEach(el => {
     el.setAttribute('tabindex', '0');
-    el.addEventListener('keypress', (e) => {
+    el.setAttribute('role', 'button');
+    el.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             el.click();
@@ -1281,39 +1422,49 @@ if ('IntersectionObserver' in window) {
     });
 }
 
-// ===== INITIALIZE ON LOAD =====
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('THRIFT HOLIC - Initialized');
-    console.log('Products loaded:', state.products.length);
+// ===== INITIALIZE FROM LOCAL STORAGE =====
+// Cart entries are restored by id and rebuilt from the product catalog so
+// stale or tampered localStorage data can never change names or prices.
+(function restoreSavedState() {
+    try {
+        const savedCart = JSON.parse(localStorage.getItem('thriftHolicCart') || '[]');
+        if (Array.isArray(savedCart)) {
+            state.cart = savedCart
+                .map(item => state.products.find(p => p.id === (item && item.id)))
+                .filter(Boolean)
+                .map(product => ({ ...product, quantity: 1 }));
+        }
 
-    // Initialize cart and wishlist from localStorage
-    const savedCart = localStorage.getItem('thriftHolicCart');
-    const savedWishlist = localStorage.getItem('thriftHolicWishlist');
-
-    if (savedCart) {
-        state.cart = JSON.parse(savedCart);
-        updateCart();
+        const savedWishlist = JSON.parse(localStorage.getItem('thriftHolicWishlist') || '[]');
+        if (Array.isArray(savedWishlist)) {
+            state.wishlist = savedWishlist.filter(id => state.products.some(p => p.id === id));
+        }
+    } catch (err) {
+        // Corrupted storage - start with an empty cart/wishlist
+        state.cart = [];
+        state.wishlist = [];
     }
 
-    if (savedWishlist) {
-        state.wishlist = JSON.parse(savedWishlist);
+    if (state.cart.length > 0) updateCart();
+    if (state.wishlist.length > 0) {
         updateWishlist();
+        // Re-render the grid so wishlist hearts reflect the restored state
+        renderProducts(state.products.slice(0, 6), 'newDropGrid');
     }
-
-    // Save state changes to localStorage
-    window.addEventListener('beforeunload', () => {
-        localStorage.setItem('thriftHolicCart', JSON.stringify(state.cart));
-        localStorage.setItem('thriftHolicWishlist', JSON.stringify(state.wishlist));
-    });
-});
+})();
 
 // ===== CLICK OUTSIDE TO CLOSE DRAWERS =====
+// closest() is used so clicks on the icons inside the trigger buttons do
+// not immediately re-close the drawer that just opened.
 document.addEventListener('click', (e) => {
-    if (cartDrawer.classList.contains('active') && !cartDrawer.contains(e.target) && e.target !== cartBtn) {
+    const opensCart = e.target.closest('#cartBtn') || e.target.closest('#heroCartBtn');
+    const opensWishlist = e.target.closest('#wishlistBtn');
+
+    if (cartDrawer.classList.contains('active') && !cartDrawer.contains(e.target) && !opensCart) {
         cartDrawer.classList.remove('active');
     }
 
-    if (wishlistDrawer.classList.contains('active') && !wishlistDrawer.contains(e.target) && e.target !== wishlistBtn) {
+    if (wishlistDrawer.classList.contains('active') && !wishlistDrawer.contains(e.target) && !opensWishlist) {
         wishlistDrawer.classList.remove('active');
     }
 });
@@ -1324,8 +1475,3 @@ document.querySelectorAll('.featured-cta').forEach(btn => {
         window.location.hash = 'new-drop';
     });
 });
-
-console.log('🛍️ THRIFT HOLIC - All systems ready!');
-
-
-// PLACEHOLDER - More code continues below

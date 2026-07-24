@@ -4,8 +4,8 @@ echo THRIFT HOLIC - Video Setup Helper
 echo ========================================
 echo.
 
-set "SOURCE=C:\Users\munni\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4"
-set "DEST=C:\Users\munni\OneDrive\Documents\thrift holic\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4"
+set "SOURCE=%USERPROFILE%\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4"
+set "DEST=%~dp0thrift-holic-hero.mp4"
 
 echo Checking if video file exists in Downloads...
 if exist "%SOURCE%" (

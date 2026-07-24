@@ -10,8 +10,8 @@ The website is configured to use your uploaded video file:
 ### To Make the Video Work:
 
 1. **Copy the video file** to the project folder:
-   - From: `C:\Users\munni\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4`
-   - To: `C:\Users\munni\OneDrive\Documents\thrift holic\`
+   - From: `%USERPROFILE%\Downloads\WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4`
+   - To: `<project folder>\thrift-holic\`
 
 2. **Or rename the video** in the HTML file (line 95 in `index.html`):
    ```html

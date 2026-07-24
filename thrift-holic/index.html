@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="theme-color" content="#0A0A0A">
     <title>THRIFT HOLIC — Pre-Loved. Reloved.</title>
     <meta name="description" content="Curated vintage pieces for people who refuse to dress ordinary. One-of-one thrift fashion and vintage streetwear.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230A0A0A'/%3E%3Ctext x='32' y='46' font-family='Arial Black,sans-serif' font-size='40' font-weight='900' fill='%23C7FF38' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +19,8 @@
     <link rel="stylesheet" href="styles.css">
 
     <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous" defer></script>
 </head>
 <body>
 
@@ -79,7 +82,7 @@
                     </svg>
                     <span class="nav-badge" id="cartCount">0</span>
                 </button>
-                <button class="nav-menu-toggle" id="menuToggle" aria-label="Menu">
+                <button class="nav-menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
                     <span></span>
                     <span></span>
                 </button>
@@ -115,8 +118,11 @@
                 loop
                 playsinline
                 preload="auto"
+                poster="hero-poster.jpg"
+                aria-hidden="true"
+                tabindex="-1"
             >
-                <source src="video-bg.mp4" type="video/mp4">
+                <source src="thrift-holic-hero.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <div class="hero-video-overlay"></div>
@@ -127,7 +133,7 @@
         <div class="hero-interface active" id="heroInterface">
             <!-- Top Bar -->
             <div class="hero-top-bar">
-                <div class="hero-brand">THRIFT HOLIC®</div>
+                <h1 class="hero-brand">THRIFT HOLIC®</h1>
                 <div class="hero-nav">
                     <a href="#shop">SHOP</a>
                     <a href="#new-drop">NEW DROP</a>
@@ -238,7 +244,7 @@
     <section class="section featured-archive" id="featuredArchive">
         <div class="featured-item" data-color="#7A1E24">
             <div class="featured-image">
-                <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800" alt="Vintage Leather Jacket">
+                <img src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800" alt="Vintage 1980s leather bomber jacket" width="800" height="1120" loading="lazy" decoding="async">
             </div>
             <div class="featured-details">
                 <span class="featured-era">1980s</span>
@@ -251,7 +257,7 @@
         </div>
         <div class="featured-item" data-color="#C7FF38">
             <div class="featured-image">
-                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800" alt="Vintage Denim Jacket">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800" alt="Vintage 1990s denim trucker jacket" width="800" height="1200" loading="lazy" decoding="async">
             </div>
             <div class="featured-details">
                 <span class="featured-era">1990s</span>
@@ -264,7 +270,7 @@
         </div>
         <div class="featured-item" data-color="#B7B4AD">
             <div class="featured-image">
-                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800" alt="Vintage Windbreaker">
+                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800" alt="Vintage 1990s track windbreaker jacket" width="800" height="1067" loading="lazy" decoding="async">
             </div>
             <div class="featured-details">
                 <span class="featured-era">1990s</span>
@@ -283,28 +289,28 @@
             <div class="lookbook-track" id="lookbookTrack">
                 <div class="lookbook-slide">
                     <div class="lookbook-image">
-                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200" alt="Lookbook 1">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200" alt="Model styling a curated vintage outfit" loading="lazy" decoding="async">
                         <div class="lookbook-overlay"></div>
                     </div>
                     <div class="lookbook-text">WORN BEFORE.<br>NEVER LIKE THIS.</div>
                 </div>
                 <div class="lookbook-slide">
                     <div class="lookbook-image">
-                        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200" alt="Lookbook 2">
+                        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200" alt="Editorial fashion shot of a one-of-one vintage look" loading="lazy" decoding="async">
                         <div class="lookbook-overlay"></div>
                     </div>
                     <div class="lookbook-text">NO RESTOCKS.<br>NO REPEATS.</div>
                 </div>
                 <div class="lookbook-slide">
                     <div class="lookbook-image">
-                        <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200" alt="Lookbook 3">
+                        <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200" alt="Street-style portrait in pre-loved clothing" loading="lazy" decoding="async">
                         <div class="lookbook-overlay"></div>
                     </div>
                     <div class="lookbook-text">OLD CLOTHES.<br>NEW ATTITUDE.</div>
                 </div>
                 <div class="lookbook-slide">
                     <div class="lookbook-image">
-                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200" alt="Lookbook 4">
+                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200" alt="Model carrying shopping bags in a thrifted outfit" loading="lazy" decoding="async">
                         <div class="lookbook-overlay"></div>
                     </div>
                     <div class="lookbook-text">YOUR NEXT FAVOURITE<br>ALREADY HAS A PAST.</div>
@@ -357,19 +363,19 @@
         </div>
         <div class="community-grid" id="communityGrid">
             <div class="community-card">
-                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" alt="Community member">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" alt="Community member portrait" loading="lazy" decoding="async">
                 <p>"Found my new favorite jacket here!"</p>
             </div>
             <div class="community-card">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" alt="Community member">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" alt="Community member portrait" loading="lazy" decoding="async">
                 <p>"Quality pieces, unique style."</p>
             </div>
             <div class="community-card">
-                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400" alt="Community member">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400" alt="Community member portrait" loading="lazy" decoding="async">
                 <p>"Love the sustainable approach!"</p>
             </div>
             <div class="community-card">
-                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400" alt="Community member">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400" alt="Community member portrait" loading="lazy" decoding="async">
                 <p>"Every piece tells a story."</p>
             </div>
         </div>
@@ -381,7 +387,8 @@
             <h2 class="newsletter-title">GET FIRST ACCESS<br>TO THE NEXT DROP.</h2>
             <p class="newsletter-subtitle">One-of-one pieces disappear quickly. Be there before they do.</p>
             <form class="newsletter-form" id="newsletterForm">
-                <input type="email" placeholder="Your email address" required>
+                <label for="newsletterEmail" class="visually-hidden">Email address</label>
+                <input type="email" id="newsletterEmail" name="email" placeholder="Your email address" autocomplete="email" maxlength="254" required>
                 <button type="submit" class="btn btn-primary">JOIN THE CULT</button>
             </form>
         </div>
@@ -430,9 +437,9 @@
     <!-- Search Modal -->
     <div class="modal" id="searchModal">
         <div class="modal-content">
-            <button class="modal-close" id="closeSearch">&times;</button>
+            <button class="modal-close" id="closeSearch" aria-label="Close search">&times;</button>
             <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search for vintage pieces..." id="searchInput">
+                <input type="text" class="search-input" placeholder="Search for vintage pieces..." id="searchInput" aria-label="Search for vintage pieces" maxlength="100">
                 <div class="search-results" id="searchResults"></div>
             </div>
         </div>
@@ -443,7 +450,7 @@
         <div class="drawer-content">
             <div class="drawer-header">
                 <h3>SHOPPING BAG</h3>
-                <button class="drawer-close" id="closeCart">&times;</button>
+                <button class="drawer-close" id="closeCart" aria-label="Close shopping bag">&times;</button>
             </div>
             <div class="drawer-body" id="cartItems">
                 <div class="empty-state">
@@ -459,7 +466,7 @@
                     <span>Total</span>
                     <span id="cartTotal">$0</span>
                 </div>
-                <button class="btn btn-primary btn-block">CHECKOUT</button>
+                <button class="btn btn-primary btn-block" id="checkoutBtn">CHECKOUT</button>
             </div>
         </div>
     </div>
@@ -469,7 +476,7 @@
         <div class="drawer-content">
             <div class="drawer-header">
                 <h3>WISHLIST</h3>
-                <button class="drawer-close" id="closeWishlist">&times;</button>
+                <button class="drawer-close" id="closeWishlist" aria-label="Close wishlist">&times;</button>
             </div>
             <div class="drawer-body" id="wishlistItems">
                 <div class="empty-state">
@@ -486,11 +493,11 @@
     <!-- Product Quick View Modal -->
     <div class="modal" id="quickViewModal">
         <div class="modal-content modal-large">
-            <button class="modal-close" id="closeQuickView">&times;</button>
+            <button class="modal-close" id="closeQuickView" aria-label="Close quick view">&times;</button>
             <div class="quick-view-content" id="quickViewContent"></div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html>

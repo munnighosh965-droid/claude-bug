@@ -57,7 +57,7 @@ thrift holic/
 ├── 📄 index.html                               (26 KB) - Main website
 ├── 🎨 styles.css                               (45 KB) - All styling
 ├── ⚙️ script.js                                (46 KB) - Functionality
-├── 🎥 WhatsApp Video 2026-07-24 at 5.57.27 PM.mp4  (3 MB) - Your video
+├── 🎥 thrift-holic-hero.mp4  (3 MB) - Hero background video
 ├── 📖 README.md                                (10 KB) - Full documentation
 ├── 📹 VIDEO_SETUP.md                           (7 KB) - Video guide
 └── 🛠️ setup-video.bat                         (1 KB) - Setup helper
